@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <title>Produto</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="styles.css" />
+    <script defer src="js/storage.js"></script>
+    <script defer src="js/utils.js"></script>
+    <script defer src="js/auth.js"></script>
+    <script defer src="js/notifications.js"></script>
+    <script defer src="js/product.js"></script>
+</head>
+<body>
+    <header class="topbar">
+        <div class="logo"><h1>Loja do Condomínio</h1></div>
+        <nav class="nav">
+            <a href="index.html">Loja</a>
+            <a href="admin.html" id="adminLink" class="hidden">Admin</a>
+            <a href="login.html" id="loginLink">Entrar</a>
+        </nav>
+    </header>
+
+    <main class="container">
+        <article id="productDetails" class="product-details"></article>
+
+        <section id="commentsSection" class="card">
+            <h2>Comentários</h2>
+            <div id="commentFormWrapper" class="hidden">
+                <textarea id="commentText" placeholder="Escreva um comentário..."></textarea>
+                <button id="submitComment" class="primary">Enviar comentário</button>
+            </div>
+            <ul id="commentList"></ul>
+        </section>
+
+        <section id="reportSection" class="card">
+            <h2>Denunciar produto</h2>
+            <p>Explique o motivo da denúncia. É obrigatório.</p>
+            <textarea id="reportText" placeholder="Descreva o problema..."></textarea>
+            <button id="submitReport" class="danger">Enviar denúncia</button>
+        </section>
+    </main>
+
+    <footer class="footer">
+        Desenvolvido por Jhonatan Orlandi de Abrantes
+    </footer>
+</body>
+</html>

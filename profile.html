@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <title>Usuário</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="styles.css" />
+    <script defer src="js/storage.js"></script>
+    <script defer src="js/utils.js"></script>
+    <script defer src="js/auth.js"></script>
+    <script defer src="js/images.js"></script>
+    <script defer src="js/profile.js"></script>
+</head>
+<body>
+    <header class="topbar">
+        <div class="logo"><h1>Loja do Condomínio</h1></div>
+        <nav class="nav">
+            <a href="index.html">Loja</a>
+            <a href="admin.html" id="adminLink" class="hidden">Admin</a>
+            <a href="login.html" id="loginLink">Entrar</a>
+        </nav>
+    </header>
+
+    <main class="container">
+        <section class="card">
+            <h2>Seu perfil</h2>
+            <div id="publicProfileToggle">
+                <label>Perfil público? (Somente nome e foto)<input type="checkbox" id="publicProfile"/></label>
+            </div>
+            <label>Bloco: <input type="text" id="editBlock" placeholder="Bloco (obrigatório)"/></label>
+            <label>Apartamento: <input type="text" id="editApt" placeholder="Apartamento (obrigatório)"/></label>
+            <label>Telefone: <input type="text" id="editPhone" placeholder="Telefone (obrigatório)"/></label>
+            <input type="file" id="profilePhoto" accept="image/*"/>
+            <button id="saveProfileBtn" class="primary">Salvar</button>
+        </section>
+
+        <button id="logoutBtn" class="danger">Sair da conta</button>
+
+        <section class="card">
+            <h2>Divulgar produto!</h2>
+            <input type="text" id="prodTitle" placeholder="Título"/>
+            <textarea id="prodDesc" placeholder="Descrição"></textarea>
+            <input type="number" id="prodPrice" placeholder="Preço" step="0.01"/>
+            <select id="prodCategory"></select>
+            <input type="file" id="prodImages" accept="image/*" multiple/>
+            <button id="submitProduct" class="primary">Enviar para aprovação</button>
+            <p class="helper">Limite: 3–5 imagens. Compressão automática.</p>
+        </section>
+
+        <section class="card">
+            <h2>Seus produtos</h2>
+            <ul id="myProducts"></ul>
+        </section>
+    </main>
+
+    <footer class="footer">
+        Desenvolvido por Jhonatan Orlandi de Abrantes
+    </footer>
+</body>
+</html>

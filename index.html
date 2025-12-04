@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <title>Loja do Condomínio</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="styles.css" />
+    <script defer src="js/storage.js"></script>
+    <script defer src="js/utils.js"></script>
+    <script defer src="js/auth.js"></script>
+    <script defer src="js/notifications.js"></script>
+    <script defer src="js/main.js"></script>
+</head>
+<body>
+    <header class="topbar">
+        <div class="logo">
+            <!-- Espaço para a logo do site -->
+            <!-- TODO: inserir <img src="sua-logo.png" alt="Logo"> -->
+            <h1>Loja do Condomínio</h1>
+        </div>
+        <nav class="nav">
+            <a href="index.html">Loja</a>
+            <a href="admin.html" id="adminLink" class="hidden">Admin</a>
+            <a href="login.html" id="loginLink">Entrar</a>
+        </nav>
+    </header>
+
+    <main class="container">
+        <section class="actions">
+            <div class="search-filter">
+                <input type="text" id="searchInput" placeholder="Buscar por título..." />
+                <select id="categoryFilter">
+                    <option value="">Todas as categorias</option>
+                </select>
+                <button id="clearFilters">Limpar</button>
+            </div>
+            <button id="createProductBtn" class="primary">Divulgar seu produto!</button>
+        </section>
+
+        <section id="productList" class="grid"></section>
+
+        <div class="pagination">
+            <button id="loadMoreBtn" class="secondary">Ver mais</button>
+        </div>
+    </main>
+
+    <footer class="footer">
+        Desenvolvido por Jhonatan Orlandi de Abrantes
+    </footer>
+</body>
+</html>

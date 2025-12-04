@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <title>Admin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="styles.css" />
+    <script defer src="js/storage.js"></script>
+    <script defer src="js/utils.js"></script>
+    <script defer src="js/auth.js"></script>
+    <script defer src="js/admin.js"></script>
+    <script defer src="js/main.js"></script>
+</head>
+<body>
+    <header class="topbar">
+        <div class="logo"><h1>Painel Admin</h1></div>
+        <nav class="nav">
+            <a href="index.html">Loja</a>
+            <a href="login.html" id="loginLink">Entrar</a>
+        </nav>
+    </header>
+
+    <main class="container">
+        <section class="card">
+            <h2>Gestão de admins</h2>
+            <input type="text" id="adminSearch" placeholder="Buscar por email ou usuário" />
+            <div id="userResults"></div>
+        </section>
+
+        <section class="grid-two">
+            <div class="card">
+                <h2>Pedidos de produtos</h2>
+                <div id="productRequests"></div>
+                <button id="loadMoreRequests" class="secondary">Ver mais (+5)</button>
+            </div>
+            <div class="card">
+                <h2>Denúncias</h2>
+                <div id="reportsList"></div>
+                <button id="loadMoreReports" class="secondary">Ver mais (+5)</button>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>Categorias</h2>
+            <div class="row">
+                <input type="text" id="newCategoryName" placeholder="Nova categoria" />
+                <button id="addCategoryBtn" class="primary">Adicionar</button>
+            </div>
+            <ul id="categoryList"></ul>
+        </section>
+
+        <section class="card">
+            <h2>Histórico de decisões</h2>
+            <ul id="adminLog"></ul>
+        </section>
+    </main>
+
+    <footer class="footer">
+        Desenvolvido por Jhonatan Orlandi de Abrantes
+    </footer>
+</body>
+</html>
