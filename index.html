@@ -1,46 +1,44 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Loja do Condomínio</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" href="styles.css" />
     <script defer src="js/storage.js"></script>
     <script defer src="js/utils.js"></script>
+    <script defer src="js/images.js"></script>
     <script defer src="js/auth.js"></script>
-    <script defer src="js/notifications.js"></script>
     <script defer src="js/main.js"></script>
 </head>
 <body>
     <header class="topbar">
         <div class="logo">
-            <!-- Espaço para a logo do site -->
-            <!-- TODO: inserir <img src="sua-logo.png" alt="Logo"> -->
-            <h1>Loja do Condomínio</h1>
+            <img src="https://img.freepik.com/premium-vector/test-icon-vector-design-templates_1172029-3113.jpg" alt="Logo" width="64">
+            <!-- <h1>Loja do Condomínio</h1> -->
         </div>
         <nav class="nav">
             <a href="index.html">Loja</a>
-            <a href="admin.html" id="adminLink" class="hidden">Admin</a>
-            <a href="login.html" id="loginLink">Entrar</a>
+            <a id="adminLink" href="admin.html" class="hidden">Admin</a>
+            <a id="loginLink" href="login.html">Entrar</a>
         </nav>
+
+        <div class="header-actions">
+            <button id="createAdBtn" class="primary">Criar anúncio</button>
+        </div>
     </header>
 
     <main class="container">
-        <section class="actions">
-            <div class="search-filter">
-                <input type="text" id="searchInput" placeholder="Buscar por título..." />
-                <select id="categoryFilter">
-                    <option value="">Todas as categorias</option>
-                </select>
-                <button id="clearFilters">Limpar</button>
-            </div>
-            <button id="createProductBtn" class="primary">Divulgar seu produto!</button>
-        </section>
+        <div class="filters">
+            <input id="searchInput" type="text" placeholder="Buscar produtos" />
+            <select id="categoryFilter"><option value="">Todas as categorias</option></select>
+            <button id="clearFilters" class="secondary">Limpar</button>
+        </div>
 
-        <section id="productList" class="grid"></section>
+        <div id="productList" class="product-list" aria-live="polite"></div>
 
-        <div class="pagination">
-            <button id="loadMoreBtn" class="secondary">Ver mais</button>
+        <div class="center">
+            <button id="loadMoreBtn" class="secondary">Carregar mais</button>
         </div>
     </main>
 

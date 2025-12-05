@@ -1,123 +1,115 @@
-window.Auth = (() => {
-    const S = window.Storage;
+// js/auth.js
+window.Auth = (function() {
+    const API = 'http://localhost:4000';
 
-    function register() {
-        const name = document.getElementById('regName').value.trim();
-        const email = document.getElementById('regEmail').value.trim().toLowerCase();
-        const password = document.getElementById('regPassword').value;
-        const phone = document.getElementById('regPhone').value.trim();
-        const block = document.getElementById('regBlock').value.trim();
-        const apt = document.getElementById('regApt').value.trim();
-
-        if (!name || !email || !password || !phone || !block || !apt) {
-            alert('Preencha nome, email, senha, telefone, bloco e apartamento.');
-            return;
-        }
-        const users = S.getUsers();
-        if (users.find(u => u.email === email)) {
-            alert('Email já cadastrado.');
-            return;
-        }
-        const user = {
-            id: crypto.randomUUID(),
-            name, email, password, phone, block, apt,
-            isAdmin: false,
-            publicProfile: false,
-            photo: null,
-            blocked: false,
-            createdAt: Date.now(),
-            createdTodayCount: 0,
-            lastCreateDay: null,
-        };
-        users.push(user);
-        S.setUsers(users);
-        S.setSession({ userId: user.id });
-        location.href = 'index.html';
-    }
-
-    async function login() {
-        const email = document.getElementById('loginEmail').value;
-        const password = document.getElementById('loginPassword').value;
-
-        const res = await fetch('http://localhost:4000/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
+    function applyPhoneMask(input) {
+        if (!input) return;
+        input.addEventListener('input', () => {
+            let v = input.value.replace(/\D/g, '').slice(0,11);
+            if (v.length <= 2) input.value = v;
+            else if (v.length <= 6) input.value = `${v.slice(0,2)} ${v.slice(2)}`;
+            else input.value = `${v.slice(0,2)} ${v.slice(2,7)}-${v.slice(7)}`;
         });
+    }
+    window.applyPhoneMask = applyPhoneMask;
 
+    async function login(email, password) {
+        const res = await fetch(`${API}/users`);
+        const users = await res.json();
+        const user = users.find(u => u.email === email && u.password === password);
+        if (!user) throw new Error('Credenciais inválidas');
+        localStorage.setItem('session', JSON.stringify({ userId: user.id }));
+        requireLoginUI();
+        return user;
+    }
+
+    async function register(payload) {
+        const res = await fetch(`${API}/register`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
         const data = await res.json();
-        if (!res.ok) {
-            alert(data.error || 'Erro ao logar');
-            return;
-        }
-
-        // guarda token para usar nas próximas requisições
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-
-        location.href = 'index.html';
-    }
-
-    function recoverPassword() {
-        const email = document.getElementById('recoverEmail').value.trim().toLowerCase();
-        const users = S.getUsers();
-        const user = users.find(u => u.email === email);
-        if (!user) {
-            alert('Email não encontrado.');
-            return;
-        }
-        S.addNotification(user.id, 'recover', 'Solicitação de recuperação de senha registrada. Procure o admin.');
-        alert('Solicitação registrada. Você receberá instruções via admin/local.');
-    }
-
-    function currentUser() {
-        const session = S.getSession();
-        if (!session) return null;
-        const users = S.getUsers();
-        return users.find(u => u.id === session.userId) || null;
+        if (!res.ok) throw new Error(data.error || 'Erro no cadastro');
+        return data;
     }
 
     function requireLoginUI() {
-        const u = currentUser();
-        const loginLink = document.getElementById('loginLink');
-        const profileLink = document.getElementById('profileLink');
-        const adminLink = document.getElementById('adminLink');
+        try {
+            const session = JSON.parse(localStorage.getItem('session') || '{}');
+            const userId = session.userId;
+            if (!userId) return;
+            fetch(`${API}/users`).then(r => r.json()).then(users => {
+                const user = users.find(u => u.id === userId);
+                if (!user) return;
+                const loginLink = document.getElementById('loginLink');
+                if (loginLink) { loginLink.textContent = user.name; loginLink.href = 'profile.html'; }
+                const profileLink = document.getElementById('profileLink');
+                if (profileLink) profileLink.classList.add('hidden');
+                const adminLink = document.getElementById('adminLink');
+                if (user.isAdmin && adminLink) adminLink.classList.remove('hidden');
+            }).catch(e => console.warn('requireLoginUI fetch failed', e));
+        } catch (err) { console.warn('requireLoginUI failed', err); }
+    }
 
-        if (u) {
-            loginLink.textContent = u.name; 
-            loginLink.href = 'profile.html';
-            if (profileLink) profileLink.classList.add('hidden');
-            if (u.isAdmin && adminLink) adminLink.classList.remove('hidden');
-        }
+    async function currentUser() {
+        const session = JSON.parse(localStorage.getItem('session') || '{}');
+        const userId = session.userId;
+        if (!userId) return null;
+        const res = await fetch(`${API}/users`);
+        const users = await res.json();
+        return users.find(u => u.id === userId) || null;
     }
 
     function ensureAdminOrRedirect() {
-        const u = currentUser();
-        if (!u || !u.isAdmin) {
-            alert('Acesso negado. Redirecionando...');
-            location.href = 'index.html';
-            return false;
-        }
-        return true;
-    }
-
-    function toggleAdmin(targetUserId, makeAdmin) {
-        const actor = currentUser();
-        if (!actor || !actor.isAdmin) return alert('Apenas admins podem alterar.');
-        if (actor.id === targetUserId) return alert('Você não pode alterar sua própria permissão.');
-        const users = S.getUsers();
-        const target = users.find(u => u.id === targetUserId);
-        if (!target) return;
-        target.isAdmin = !!makeAdmin;
-        S.setUsers(users);
-        S.addAdminLog(actor.id, makeAdmin ? 'promote' : 'demote', targetUserId, '');
-        alert(makeAdmin ? 'Usuário promovido a admin.' : 'Usuário removido de admin.');
+        const session = JSON.parse(localStorage.getItem('session') || '{}');
+        const userId = session.userId;
+        if (!userId) { alert('Você precisa estar logado.'); location.href = 'login.html'; return false; }
+        fetch(`${API}/users`).then(r => r.json()).then(users => {
+            const user = users.find(u => u.id === userId);
+            if (!user || !user.isAdmin) { alert('Acesso negado. Redirecionando...'); location.href = 'index.html'; }
+        }).catch(() => { location.href = 'index.html'; });
     }
 
     function logout() {
-        S.setSession(null);
+        localStorage.removeItem('session');
+        localStorage.removeItem('sessionUser');
         location.href = 'index.html';
     }
 
-    return { register, login, recoverPassword, currentUser, requireLoginUI, ensureAdminOrRedirect, toggleAdmin, logout };
+    // Adicione no final de js/auth.js (ou dentro do IIFE, após as funções)
+    document.addEventListener('DOMContentLoaded', () => {
+        // Bind do botão de login (se existir)
+        const loginBtn = document.getElementById('loginBtn');
+        if (loginBtn) {
+            loginBtn.addEventListener('click', async (ev) => {
+                ev.preventDefault();
+                const email = document.getElementById('loginEmail')?.value?.trim();
+                const password = document.getElementById('loginPassword')?.value;
+                if (!email || !password) { alert('Preencha email e senha.'); return; }
+                try {
+                    await login(email, password); // usa a função login(email,password)
+                    alert('Login realizado com sucesso!');
+                    location.href = 'index.html';
+                } catch (err) {
+                    alert(err.message || 'Erro no login');
+                }
+            });
+        }
+
+        // Bind do botão "Criar anúncio" global (se existir)
+        const createAdBtn = document.getElementById('createAdBtn');
+        if (createAdBtn) {
+            createAdBtn.addEventListener('click', (ev) => {
+                ev.preventDefault();
+                const session = JSON.parse(localStorage.getItem('session') || '{}');
+                if (!session.userId) {
+                    if (confirm('Você precisa estar logado para criar um anúncio. Deseja entrar agora?')) {
+                        location.href = 'login.html';
+                    }
+                    return;
+                }
+                // se estiver logado, ir para profile.html (onde está o formulário)
+                location.href = 'profile.html';
+            });
+        }
+    });
+
+    return { applyPhoneMask, login, register, requireLoginUI, currentUser, ensureAdminOrRedirect, logout };
 })();

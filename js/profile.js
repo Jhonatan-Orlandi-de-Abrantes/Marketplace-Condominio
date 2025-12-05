@@ -1,181 +1,134 @@
-(function() {
-    const S = window.Storage;
-    const U = window.Utils;
+// js/profile.js
+(async function() {
+    const API = 'http://localhost:4000';
     const I = window.Images;
+    const U = window.Utils || {};
 
-    const user = window.Auth.currentUser();
-    if (!user) { alert('Faça login.'); location.href = 'login.html'; }
+    if (!window.Auth) { console.error('Auth não encontrado'); return; }
+    const user = await window.Auth.currentUser();
+    if (!user) { alert('Faça login.'); location.href = 'login.html'; return; }
+
     window.Auth.requireLoginUI();
+    document.getElementById('adminLink')?.classList.toggle('hidden', !user.isAdmin);
 
-    const adminLink = document.getElementById('adminLink');
-    if (user.isAdmin) adminLink.classList.remove('hidden');
+    const editBlock = document.getElementById('editBlock');
+    const editApt = document.getElementById('editApt');
+    const editPhone = document.getElementById('editPhone');
+    const publicProfile = document.getElementById('publicProfile');
 
-    document.getElementById('publicProfile').checked = !!user.publicProfile;
-    document.getElementById('editBlock').value = user.block || '';
-    document.getElementById('editApt').value = user.apt || '';
+    editBlock.value = user.block || '';
+    editApt.value = user.apt || '';
+    editPhone.value = formatPhoneDisplay(user.phone || '');
+    publicProfile.checked = !!user.publicProfile;
 
-    document.getElementById('saveProfileBtn').addEventListener('click', () => {
-        const users = S.getUsers();
-        const u = users.find(x => x.id === user.id);
+    if (typeof window.applyPhoneMask === 'function') window.applyPhoneMask(editPhone);
 
-        const block = document.getElementById('editBlock').value.trim();
-        const apt = document.getElementById('editApt').value.trim();
-        const publicProfile = document.getElementById('publicProfile').checked;
-        const phone = document.getElementById('editPhone').value.trim();
+    document.getElementById('logoutBtn')?.addEventListener('click', () => window.Auth.logout());
 
-        if (!block || !apt || !phone) return alert('Bloco, apartamento e telefone são obrigatórios!');
+    async function loadCategories() {
+        try {
+            const res = await fetch(`${API}/categories`);
+            if (!res.ok) throw new Error('Erro ao carregar categorias');
+            const cats = await res.json();
+            const prodCategorySelect = document.getElementById('prodCategory');
+            if (prodCategorySelect) prodCategorySelect.innerHTML = `<option value="">Selecione</option>` + cats.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+        } catch (err) { console.warn('Erro ao carregar categorias:', err); }
+    }
+    await loadCategories();
 
-        u.block = block;
-        u.apt = apt;
-        u.publicProfile = publicProfile;
-        u.phone = phone;
-            
-        const photoInput = document.getElementById('profilePhoto');
-        if (photoInput.files[0]) {
-            I.compressFiles([photoInput.files[0]], 1, 1).then(res => {
-            u.photo = res[0];
-            S.setUsers(users);
+    document.getElementById('saveProfileBtn')?.addEventListener('click', async () => {
+        const block = editBlock.value.trim();
+        const apt = editApt.value.trim();
+        const phoneRaw = editPhone.value || '';
+        const phoneDigits = phoneRaw.replace(/\D/g, '');
+        const pub = !!publicProfile.checked;
+        if (!block || !apt || !phoneDigits) return alert('Preencha todos os campos obrigatórios.');
+        if (!/^\d{11}$/.test(phoneDigits)) return alert('Telefone inválido. Use DDD + número (11 dígitos).');
+        try {
+            const res = await fetch(`${API}/users/update`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id: user.id, block, apt, phone: phoneDigits, publicProfile: pub }) });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Erro ao atualizar perfil');
             alert('Perfil atualizado.');
-            }).catch(err => alert(err.message));
-        } else {
-            S.setUsers(users);
-            alert('Perfil atualizado.');
-        }
+        } catch (err) { alert(err.message); }
     });
 
-
-    const prodCategorySelect = document.getElementById('prodCategory');
-    const cats = S.getCategories();
-    prodCategorySelect.innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join('');
-
-    document.getElementById('submitProduct').addEventListener('click', async () => {
+    document.getElementById('submitProduct')?.addEventListener('click', async () => {
+        const session = JSON.parse(localStorage.getItem('session') || '{}');
+        if (!session.userId) {
+            if (confirm('Você precisa estar logado para criar um anúncio. Deseja entrar agora?')) location.href = 'login.html';
+            return;
+        }
         try {
-            enforceDailyLimit(user);
             const title = document.getElementById('prodTitle').value.trim();
             const description = document.getElementById('prodDesc').value.trim();
             const price = parseFloat(document.getElementById('prodPrice').value);
             const category = document.getElementById('prodCategory').value;
             const files = document.getElementById('prodImages').files;
-
-            if (!title || !description || isNaN(price)) throw new Error('Título, descrição e preço são obrigatórios.');
-            // Anti-repetição básica
-            if (isDuplicateProduct(user.id, title, description)) throw new Error('Produto repetido detectado.');
-
-            const images = await I.compressFiles(files, 3, 5);
-
-            const products = S.getProducts();
-            const id = crypto.randomUUID();
-            const product = {
-                id, userId: user.id, title, description, price, category,
-                images, status: 'pendente', sold: false, deleted: false,
-                contactPhone: user.phone, block: user.block, apt: user.apt,
-                comments: [],
-                lastEditAt: null,
-                createdAt: Date.now(),
-            };
-            async function createProduct(product) {
-                const token = localStorage.getItem('token');
-                const res = await fetch('http://localhost:4000/products', {
-                    method: 'POST',
-                    headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(product)
-                });
-                const data = await res.json();
-                if (!res.ok) {
-                    alert(data.error || 'Erro ao criar produto');
-                    return;
-                }
+            if (!title || !description || Number.isNaN(price) || !category) throw new Error('Título, descrição, preço e categoria são obrigatórios.');
+            const images = await I.compressFiles(files, 2, 5);
+            const product = { id: `${Date.now()}_${Math.random().toString(36).slice(2,8)}`, userId: user.id, title, description, price, category, images, status: 'pendente', sold: false, deleted: false, contactPhone: user.phone, block: user.block, apt: user.apt, comments: [], createdAt: Date.now() };
+            const res = await fetch(`${API}/products`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(product) });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Erro ao criar produto');
             alert('Produto enviado para aprovação!');
-            }
-
-            const reqs = S.getRequests();
-            reqs.push({ id: crypto.randomUUID(), productId: id, type: 'create', date: Date.now() });
-            S.setRequests(reqs);
-
-            incDailyCount(user);
-            alert('Produto enviado para aprovação.');
-            renderMyProducts();
-        } catch (err) {
-            alert(err.message);
-        }
+            await renderMyProducts();
+        } catch (err) { alert(err.message); }
     });
 
-    document.getElementById('logoutBtn').addEventListener('click', () => {
-        window.Auth.logout();
-    });
-
-
-    function renderMyProducts() {
+    async function renderMyProducts() {
         const list = document.getElementById('myProducts');
-        const products = S.getProducts().filter(p => p.userId === user.id && !p.deleted);
-        list.innerHTML = products.map(p => {
-            const statusClass = `status-${p.status}`;
-            const reason = p.rejectionMessage ? ` • Motivo: ${p.rejectionMessage}` : '';
-            const controls = `
-                <div class="row">
-                    <button class="secondary" onclick="editProduct('${p.id}')">Editar</button>
-                    <button class="secondary" onclick="markSold('${p.id}')">Marcar como vendido</button>
-                </div>`;
-            return `<li>
-                <strong>${p.title}</strong> — <span class="${statusClass}">${p.status}</span>${reason}
-                ${controls}
-            </li>`;
-        }).join('');
-    }
-
-    window.editProduct = (id) => {
-        const products = S.getProducts();
-        const p = products.find(x => x.id === id);
-        if (!p) return;
-        const newTitle = prompt('Novo título:', p.title) || p.title;
-        const newDesc = prompt('Nova descrição:', p.description) || p.description;
-        const newPrice = parseFloat(prompt('Novo preço:', p.price)) || p.price;
-        p.title = newTitle; p.description = newDesc; p.price = newPrice;
-        p.status = 'pendente';
-        p.lastEditAt = Date.now();
-        S.setProducts(products);
-        const reqs = S.getRequests();
-        reqs.push({ id: crypto.randomUUID(), productId: p.id, type: 'edit', date: Date.now() });
-        S.setRequests(reqs);
-        alert('Edição enviada para aprovação.');
-        renderMyProducts();
-    };
-
-    window.markSold = (id) => {
-        const products = S.getProducts();
-        const p = products.find(x => x.id === id);
-        if (!p) return;
-        p.sold = true;
-        S.setProducts(products);
-        alert('Produto marcado como vendido.');
-        renderMyProducts();
-    };
-
-    function enforceDailyLimit(u) {
-        const today = U.todayKey();
-        if (u.lastCreateDay !== today) {
-            u.lastCreateDay = today; u.createdTodayCount = 0;
-            const users = S.getUsers(); const me = users.find(x => x.id === u.id);
-            me.lastCreateDay = today; me.createdTodayCount = 0; S.setUsers(users);
-        }
-        if (u.createdTodayCount >= 3) throw new Error('Limite de 3 produtos por dia atingido.');
-    }
-    function incDailyCount(u) {
-        const users = S.getUsers(); const me = users.find(x => x.id === u.id);
-        me.createdTodayCount = (me.createdTodayCount || 0) + 1;
-        S.setUsers(users);
-    }
-    function isDuplicateProduct(userId, title, description) {
-        async function loadProducts() {
-            const res = await fetch('http://localhost:4000/products');
+        if (!list) return;
+        try {
+            const res = await fetch(`${API}/products`);
             const products = await res.json();
-            renderProducts(products);
-        }
-        return products.some(p => p.title.trim() === title.trim() && p.description.trim() === description.trim());
+            const mine = products.filter(p => p.userId === user.id && !p.deleted);
+            list.innerHTML = mine.map(p => {
+                const reason = p.rejectionMessage ? ` • Motivo: ${escapeHtml(p.rejectionMessage)}` : '';
+                return `<li><strong>${escapeHtml(p.title)}</strong> — <span class="status-${escapeHtml(p.status)}">${escapeHtml(p.status)}</span>${reason} <button class="small danger" data-delete-own="${escapeHtml(p.id)}">Excluir</button></li>`;
+            }).join('') || '<li>Você não tem produtos.</li>';
+        } catch (err) { list.innerHTML = '<li>Erro ao carregar produtos.</li>'; }
     }
 
-    renderMyProducts();
+    async function renderMyComments() {
+        const list = document.getElementById('myComments');
+        if (!list) return;
+        try {
+            const res = await fetch(`${API}/comments`);
+            const comments = await res.json();
+            const mine = comments.filter(c => c.userId === user.id);
+            list.innerHTML = mine.map(c => `<li><strong>${escapeHtml(c.userName || 'Você')}</strong> em <em>${escapeHtml(c.productId)}</em> — ${escapeHtml(c.text)} <button class="small danger" data-delete-comment="${escapeHtml(c.id)}">Excluir</button></li>`).join('') || '<li>Você não fez comentários.</li>';
+        } catch (err) { list.innerHTML = '<li>Erro ao carregar comentários.</li>'; }
+    }
+
+    document.addEventListener('click', async (e) => {
+        const delOwn = e.target.getAttribute('data-delete-own');
+        const delComment = e.target.getAttribute('data-delete-comment');
+        if (delOwn) {
+            if (!confirm('Excluir este produto? Esta ação não pode ser desfeita.')) return;
+            try {
+                const res = await fetch(`${API}/products/delete-by-owner`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id: delOwn, userId: user.id }) });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Erro ao excluir produto');
+                alert('Produto excluído.');
+                await renderMyProducts();
+            } catch (err) { alert(err.message); }
+            return;
+        }
+        if (delComment) {
+            if (!confirm('Excluir este comentário?')) return;
+            try {
+                const res = await fetch(`${API}/comments/${encodeURIComponent(delComment)}`, { method:'DELETE' });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Erro ao excluir comentário');
+                alert('Comentário excluído.');
+                await renderMyComments();
+            } catch (err) { alert(err.message); }
+            return;
+        }
+    });
+
+    await Promise.all([renderMyProducts(), renderMyComments()]);
+
+    function escapeHtml(s = '') { return String(s).replace(/[&<>"']/g, (m) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+    function formatPhoneDisplay(digits) { const v = String(digits || '').replace(/\D/g, ''); if (v.length !== 11) return v; return `${v.slice(0,2)} ${v.slice(2,7)}-${v.slice(7)}`; }
 })();

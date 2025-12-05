@@ -11,19 +11,22 @@
 <body>
     <header class="topbar">
         <div class="logo"><h1>Loja do Condomínio</h1></div>
-        <nav class="nav"><a href="index.html">Loja</a></nav>
+        <nav class="nav">
+            <a href="index.html">Loja</a>
+        </nav>
     </header>
 
     <main class="container">
         <section class="card">
-            <h2>Cadastro</h2>
-            <input type="text" id="regName" placeholder="Nome" />
-            <input type="email" id="regEmail" placeholder="Email" />
-            <input type="password" id="regPassword" placeholder="Senha" />
-            <input type="text" id="regPhone" placeholder="Telefone (obrigatório)" />
-            <input type="text" id="regBlock" placeholder="Bloco (obrigatório)" />
-            <input type="text" id="regApt" placeholder="Apartamento (obrigatório)" />
-            <button id="registerBtn" class="primary">Cadastrar</button>
+            <form id="registerForm">
+                <input id="name" placeholder="Nome">
+                <input id="email" placeholder="Email">
+                <input id="password" placeholder="Senha">
+                <input id="phone" name="phone" type="tel" pattern="^\d{9}$" placeholder="Telefone (9 dígitos)" required>
+                <input id="block" placeholder="Bloco">
+                <input id="apt" placeholder="Apartamento">
+                <button id="registerBtn" class="primary">Cadastrar</button>
+            </form>
         </section>
     </main>
 
@@ -32,7 +35,17 @@
     </footer>
 
     <script>
-        document.getElementById('registerBtn').addEventListener('click', () => window.Auth.register());
+        window.addEventListener("DOMContentLoaded", () => {
+            const btn = document.getElementById("registerBtn");
+            if (!btn || !window.Auth || typeof window.Auth.register !== "function") {
+                console.error("Função de cadastro não disponível");
+                return;
+            }
+            btn.addEventListener("click", (e) => {
+                e.preventDefault();
+                window.Auth.register();
+            });
+        });
     </script>
 </body>
 </html>

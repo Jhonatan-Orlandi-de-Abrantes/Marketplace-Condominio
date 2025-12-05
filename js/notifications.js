@@ -1,7 +1,10 @@
 window.Notifications = (() => {
     const S = window.Storage;
     function notifyApproval(product, aprovado, message) {
-        const users = S.getUsers();
+        Storage.listUsers().then(users => {
+            const u = users.find(x => x.id === user.id);
+            });
+
         const owner = users.find(u => u.id === product.userId);
         if (owner) {
             S.addNotification(owner.id, aprovado ? 'aprovado' : 'rejeitado',
@@ -10,7 +13,9 @@ window.Notifications = (() => {
         }
     }
     function notifyComment(product, commenterName) {
-        const users = S.getUsers();
+        Storage.listUsers().then(users => {
+            const u = users.find(x => x.id === user.id);
+            });
         const owner = users.find(u => u.id === product.userId);
         if (owner) {
             S.addNotification(owner.id, 'comment', `Seu produto "${product.title}" recebeu um comentário de ${commenterName}.`);

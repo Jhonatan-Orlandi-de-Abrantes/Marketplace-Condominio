@@ -23,7 +23,7 @@ window.Images = (() => {
         for (const f of files) {
             results.push(await compressFile(f));
         }
-        return results; // array de dataURLs
+        return results;
     }
     return { compressFiles };
 })();
