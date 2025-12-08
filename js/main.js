@@ -1,4 +1,3 @@
-// js/main.js
 (function() {
     try { window.Auth?.requireLoginUI?.(); } catch (e) { console.warn(e); }
 
@@ -8,8 +7,7 @@
     const loadMoreBtn = document.getElementById('loadMoreBtn');
     const clearFilters = document.getElementById('clearFilters');
 
-    // botão "criar anúncio" (pode existir no header ou em outras páginas)
-    const createAdBtn = document.getElementById('createAdBtn'); // se você usa outro id, ajuste aqui
+    const createAdBtn = document.getElementById('createAdBtn');
 
     if (createAdBtn) {
         createAdBtn.addEventListener('click', () => {
@@ -18,7 +16,6 @@
                 if (confirm('Você precisa estar logado para criar um anúncio. Deseja entrar agora?')) location.href = 'login.html';
                 return;
             }
-            // se estiver logado, ir para profile.html (onde está o formulário de criação)
             location.href = 'profile.html';
         });
     }

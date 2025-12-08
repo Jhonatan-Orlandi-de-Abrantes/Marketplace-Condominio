@@ -1,4 +1,3 @@
-// js/profile.js
 (async function() {
     const API = 'http://localhost:4000';
     const I = window.Images;

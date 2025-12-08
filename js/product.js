@@ -1,4 +1,3 @@
-// js/product.js
 (async function() {
     const API = 'http://localhost:4000';
     const U = window.Utils || {};
@@ -25,7 +24,6 @@
             const images = Array.isArray(p.images) ? p.images : [];
             const mainImg = images[0] || '';
 
-            // obter sessão (se houver)
             const session = JSON.parse(localStorage.getItem('session') || '{}');
             const meId = session.userId;
 
@@ -51,7 +49,6 @@
                 </div>
             `;
 
-            // gallery logic
             let current = 0;
             const mainImage = document.getElementById('mainImage');
             const thumbs = Array.from(document.querySelectorAll('#thumbs img'));
@@ -66,7 +63,6 @@
             document.getElementById('nextImg').addEventListener('click', () => setImage(current + 1));
             thumbs.forEach(t => t.addEventListener('click', (e) => setImage(Number(e.target.dataset.index))));
 
-            // contact seller -> WhatsApp
             document.getElementById('contactSeller').addEventListener('click', async () => {
                 try {
                     const usersRes = await fetch(`${API}/users`);
@@ -81,7 +77,6 @@
                 }
             });
 
-            // comentários
             const commentFormWrapper = document.getElementById('commentFormWrapper');
             const commentList = document.getElementById('commentList');
             if (meId) commentFormWrapper?.classList.remove('hidden');
@@ -95,7 +90,6 @@
                         const actions = [];
                         if (isMine) actions.push(`<button class="small danger" data-delete-comment="${escapeHtml(c.id)}">Excluir</button>`);
                         if (meId && !isMine) actions.push(`<button class="small secondary" data-report-comment="${escapeHtml(c.id)}">Denunciar</button>`);
-                        // if not logged, no action buttons shown
                         return `<li data-comment-id="${escapeHtml(c.id)}"><strong>${escapeHtml(c.userName || 'Usuário')}</strong> <small>${new Date(c.createdAt).toLocaleString()}</small><p>${escapeHtml(c.text)}</p><div class="comment-actions">${actions.join(' ')}</div></li>`;
                     }).join('') || '<li>Sem comentários.</li>';
                 } catch {
@@ -104,7 +98,6 @@
             }
             await loadComments();
 
-            // submit comment
             document.getElementById('submitComment')?.addEventListener('click', async () => {
                 const text = document.getElementById('commentText').value.trim();
                 if (!text) return alert('Escreva um comentário.');
@@ -129,7 +122,6 @@
                 }
             });
 
-            // delegated actions for comment delete/report
             document.getElementById('commentList').addEventListener('click', async (e) => {
                 const delId = e.target.getAttribute('data-delete-comment');
                 const reportId = e.target.getAttribute('data-report-comment');
@@ -165,7 +157,6 @@
                 }
             });
 
-            // denúncias de produto
             const reportText = document.getElementById('reportText');
             document.getElementById('submitReport')?.addEventListener('click', async () => {
                 const txt = reportText.value.trim();
@@ -188,7 +179,6 @@
                 }
             });
 
-            // if user not logged, clicking the "Denunciar (faça login)" button redirects to login
             document.getElementById('openReportFormNotLogged')?.addEventListener('click', () => {
                 if (confirm('Você precisa estar logado para denunciar. Deseja entrar agora?')) location.href = 'login.html';
             });

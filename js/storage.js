@@ -1,4 +1,3 @@
-// js/storage.js
 const API_URL = 'http://localhost:4000';
 
 async function request(path, options = {}) {

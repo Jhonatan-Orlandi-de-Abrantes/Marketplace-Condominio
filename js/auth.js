@@ -76,7 +76,6 @@ window.Auth = (function() {
         location.href = 'index.html';
     }
 
-    // Cadastro via formulário (mecanismo único)
     async function registerUserFromForm() {
         const name = document.getElementById('name')?.value?.trim();
         const email = document.getElementById('email')?.value?.trim();
@@ -108,15 +107,12 @@ window.Auth = (function() {
                 throw new Error(msg);
             }
 
-            // marca que houve cadastro bem-sucedido e guarda email para sugestão de login
             try {
                 localStorage.setItem('justRegistered', JSON.stringify({ email }));
             } catch (e) {
-                // se storage falhar, não impede o fluxo
                 console.warn('Não foi possível gravar justRegistered:', e);
             }
 
-            // redireciona para login
             location.href = 'login.html';
         } catch (err) {
             alert(err.message || 'Erro ao cadastrar');
@@ -125,13 +121,10 @@ window.Auth = (function() {
     }
     window.registerUserFromForm = registerUserFromForm;
 
-    // binds de UI quando DOM pronto
     document.addEventListener('DOMContentLoaded', () => {
-        // máscara de telefone no cadastro (se existir campo)
         const phoneInput = document.getElementById('phone');
         if (phoneInput) applyPhoneMask(phoneInput);
 
-        // botão login
         const loginBtn = document.getElementById('loginBtn');
         if (loginBtn) {
             loginBtn.addEventListener('click', async (ev) => {
@@ -148,8 +141,6 @@ window.Auth = (function() {
                 }
             });
         }
-
-        // botão cadastrar (bind automático além do onclick)
         const registerBtn = document.getElementById('registerBtn');
         if (registerBtn) {
             registerBtn.addEventListener('click', (ev) => {
@@ -157,8 +148,6 @@ window.Auth = (function() {
                 registerUserFromForm();
             });
         }
-
-        // botão criar anúncio (exige login)
         const createAdBtn = document.getElementById('createAdBtn');
         if (createAdBtn) {
             createAdBtn.addEventListener('click', (ev) => {

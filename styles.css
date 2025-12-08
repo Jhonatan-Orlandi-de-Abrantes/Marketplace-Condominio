@@ -323,3 +323,26 @@ button.small { padding:4px 8px; font-size:.85rem; }
   flex: 1 1 auto;
   min-width: 140px;
 }
+.site-toast {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  background: #111827;
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  z-index: 9999;
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity .22s ease, transform .22s ease;
+  font-size: 0.95rem;
+  max-width: 320px;
+}
+.site-toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+.site-toast.success { background: #0b6b3a; }
+.site-toast.error { background: #b91c1c; }
+.site-toast.info { background: #0b5cff; }
