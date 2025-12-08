@@ -1,10 +1,13 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8" />
+    <meta charset="UTF-8"/>
     <title>Entrar</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" href="styles.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="stylesheet" href="styles.css"/>
+    <script defer src="js/storage.js"></script>
+    <script defer src="js/auth.js"></script>
+    <script defer src="js/login.js"></script>
 </head>
 <body>
     <header class="topbar">
@@ -17,28 +20,52 @@
 
     <main class="container">
         <section class="card">
-            <h2>Login</h2>
-            <input type="email" id="loginEmail" placeholder="Email" />
-            <input type="password" id="loginPassword" placeholder="Senha" />
-            <button id="loginBtn" class="primary">Entrar</button>
-            <a href="#" id="forgotPasswordLink" class="link">Esqueci minha senha</a>
-        </section>
+            <h2>Entrar!</h2>
+            <div id="flashMessage" class="flash hidden" role="status" aria-live="polite" style="margin-bottom:12px;padding:10px;border-radius:6px;background:#e9f7ef;color:#0b6b3a;"></div>
+            <form id="loginForm">
+                <input id="loginEmail" type="email" placeholder="Email" required />
+                <input id="loginPassword" type="password" placeholder="Senha" required />
+                <button id="loginBtn" type="submit">Entrar</button>
+            </form>
 
-        <section id="recoverSection" class="card hidden">
-            <h2>Recuperar senha</h2>
-            <p>Informe seu email para receber instruções de recuperação.</p>
-            <input type="email" id="recoverEmail" placeholder="Seu email" />
-            <button id="recoverBtn" class="secondary">Enviar</button>
+            <p style="margin-top:12px;">Ainda não tem conta? <a href="register.html">Cadastre-se</a></p>
         </section>
     </main>
 
     <footer class="footer">
-        Desenvolvido por Jhonatan Orlandi de Abrantes
+        Desenvolvido por Jhonatan Orlandi de Abrantes — <a href="www.linkedin.com/in/jhonatan-orlandi-de-abrantes" target="_blank" rel="noopener noreferrer">Meu Linkedin</a>
     </footer>
 
-<script defer src="js/storage.js"></script>
-<script defer src="js/auth.js"></script>
-<script defer src="js/login.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                const raw = localStorage.getItem('justRegistered');
+                if (raw) {
+                    const info = JSON.parse(raw);
+                    const flash = document.getElementById('flashMessage');
+                    if (flash) {
+                        const emailText = info && info.email ? ` (${info.email})` : '';
+                        flash.textContent = `Cadastro realizado com sucesso. Faça login na conta${emailText}.`;
+                        flash.classList.remove('hidden');
+                        localStorage.removeItem('justRegistered');
+                    } else {
+                        alert('Cadastro realizado com sucesso. Faça login na conta.');
+                    localStorage.removeItem('justRegistered');
+                    }
+                }
+            } catch (e) {
+                console.warn('Erro ao processar justRegistered:', e);
+                try { localStorage.removeItem('justRegistered'); } catch {}
+            }
+
+            const form = document.getElementById('loginForm');
+            form?.addEventListener('submit', (ev) => {
+                ev.preventDefault();
+                const loginBtn = document.getElementById('loginBtn');
+                if (loginBtn) loginBtn.click();
+            });
+        });
+    </script>
 
 </body>
 </html>

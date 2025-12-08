@@ -1,4 +1,3 @@
-// js/auth.js
 window.Auth = (function() {
     const API = 'http://localhost:4000';
 
@@ -24,7 +23,11 @@ window.Auth = (function() {
     }
 
     async function register(payload) {
-        const res = await fetch(`${API}/register`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+        const res = await fetch(`${API}/register`, {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify(payload)
+        });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Erro no cadastro');
         return data;
@@ -73,9 +76,62 @@ window.Auth = (function() {
         location.href = 'index.html';
     }
 
-    // Adicione no final de js/auth.js (ou dentro do IIFE, após as funções)
+    // Cadastro via formulário (mecanismo único)
+    async function registerUserFromForm() {
+        const name = document.getElementById('name')?.value?.trim();
+        const email = document.getElementById('email')?.value?.trim();
+        const password = document.getElementById('password')?.value;
+        const phoneRaw = document.getElementById('phone')?.value;
+        const block = document.getElementById('block')?.value?.trim();
+        const apt = document.getElementById('apt')?.value?.trim();
+
+        if (!name || !email || !password || !phoneRaw || !block || !apt) {
+            alert('Preencha todos os campos obrigatórios.');
+            return;
+        }
+
+        const phone = String(phoneRaw).replace(/\D/g, '');
+        if (!/^\d{11}$/.test(phone)) {
+            alert('Telefone inválido. Use DDD + número (11 dígitos).');
+            return;
+        }
+
+        try {
+            const res = await fetch(`${API}/register`, {
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({ name, email, password, phone, block, apt })
+            });
+            const data = await res.json().catch(() => null);
+            if (!res.ok) {
+                const msg = (data && data.error) ? data.error : `Erro no cadastro (HTTP ${res.status})`;
+                throw new Error(msg);
+            }
+
+            // marca que houve cadastro bem-sucedido e guarda email para sugestão de login
+            try {
+                localStorage.setItem('justRegistered', JSON.stringify({ email }));
+            } catch (e) {
+                // se storage falhar, não impede o fluxo
+                console.warn('Não foi possível gravar justRegistered:', e);
+            }
+
+            // redireciona para login
+            location.href = 'login.html';
+        } catch (err) {
+            alert(err.message || 'Erro ao cadastrar');
+            console.error('Erro no cadastro:', err);
+        }
+    }
+    window.registerUserFromForm = registerUserFromForm;
+
+    // binds de UI quando DOM pronto
     document.addEventListener('DOMContentLoaded', () => {
-        // Bind do botão de login (se existir)
+        // máscara de telefone no cadastro (se existir campo)
+        const phoneInput = document.getElementById('phone');
+        if (phoneInput) applyPhoneMask(phoneInput);
+
+        // botão login
         const loginBtn = document.getElementById('loginBtn');
         if (loginBtn) {
             loginBtn.addEventListener('click', async (ev) => {
@@ -84,7 +140,7 @@ window.Auth = (function() {
                 const password = document.getElementById('loginPassword')?.value;
                 if (!email || !password) { alert('Preencha email e senha.'); return; }
                 try {
-                    await login(email, password); // usa a função login(email,password)
+                    await login(email, password);
                     alert('Login realizado com sucesso!');
                     location.href = 'index.html';
                 } catch (err) {
@@ -93,7 +149,16 @@ window.Auth = (function() {
             });
         }
 
-        // Bind do botão "Criar anúncio" global (se existir)
+        // botão cadastrar (bind automático além do onclick)
+        const registerBtn = document.getElementById('registerBtn');
+        if (registerBtn) {
+            registerBtn.addEventListener('click', (ev) => {
+                ev.preventDefault();
+                registerUserFromForm();
+            });
+        }
+
+        // botão criar anúncio (exige login)
         const createAdBtn = document.getElementById('createAdBtn');
         if (createAdBtn) {
             createAdBtn.addEventListener('click', (ev) => {
@@ -105,7 +170,6 @@ window.Auth = (function() {
                     }
                     return;
                 }
-                // se estiver logado, ir para profile.html (onde está o formulário)
                 location.href = 'profile.html';
             });
         }

@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8" />
+    <meta charset="UTF-8"/>
     <title>Cadastrar</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" href="styles.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="stylesheet" href="styles.css"/>
     <script defer src="js/storage.js"></script>
     <script defer src="js/auth.js"></script>
 </head>
@@ -18,32 +18,33 @@
 
     <main class="container">
         <section class="card">
-            <form id="registerForm">
-                <input id="name" placeholder="Nome">
-                <input id="email" placeholder="Email">
-                <input id="password" placeholder="Senha">
-                <input id="phone" name="phone" type="tel" pattern="^\d{9}$" placeholder="Telefone (9 dígitos)" required>
-                <input id="block" placeholder="Bloco">
-                <input id="apt" placeholder="Apartamento">
-                <button id="registerBtn" class="primary">Cadastrar</button>
+            <h2>Seja bem-vindo! Faça parte e registre-se aqui!</h2>
+            <form id="registerForm" onsubmit="event.preventDefault(); window.registerUserFromForm();">
+                <input id="name" type="text" placeholder="Nome completo" required/>
+                <input id="email" type="email" placeholder="Email" required/>
+                <input id="password" type="password" placeholder="Senha" required/>
+                <input id="phone" type="text" placeholder="Telefone (DDD + número)" required/>
+                <input id="block" type="number" placeholder="Bloco" required/>
+                <input id="apt" type="number" placeholder="Apartamento" required/>
+                <button type="submit" id="registerUserFromForm">Cadastrar</button>
             </form>
         </section>
     </main>
 
     <footer class="footer">
-        Desenvolvido por Jhonatan Orlandi de Abrantes
+        Desenvolvido por Jhonatan Orlandi de Abrantes — <a href="www.linkedin.com/in/jhonatan-orlandi-de-abrantes" target="_blank" rel="noopener noreferrer">Meu Linkedin</a>
     </footer>
 
     <script>
-        window.addEventListener("DOMContentLoaded", () => {
-            const btn = document.getElementById("registerBtn");
-            if (!btn || !window.Auth || typeof window.Auth.register !== "function") {
-                console.error("Função de cadastro não disponível");
-                return;
+        window.addEventListener('DOMContentLoaded', () => {
+            const phoneInput = document.getElementById('phone');
+            if (window.applyPhoneMask && phoneInput) {
+                window.applyPhoneMask(phoneInput);
             }
-            btn.addEventListener("click", (e) => {
+            const btn = document.getElementById('registerBtn');
+            btn?.addEventListener('click', (e) => {
                 e.preventDefault();
-                window.Auth.register();
+                window.registerUserFromForm();
             });
         });
     </script>
